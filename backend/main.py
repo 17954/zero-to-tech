@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from pypinyin import lazy_pinyin,Style
 from snownlp import SnowNLP
-import json
+from storage import init_db,save_record,get_history
 from datetime import datetime,timezone
 
 app = FastAPI()
@@ -13,6 +13,8 @@ app.add_middleware(
     allow_origins=["http://localhost:3000"],
     allow_methods=["GET", "POST"],
 )
+
+init_db()
 
 profile = {
     "heroTitle": "关于我（来自后端）",  # → 临时加的标记，验证完删掉
@@ -28,28 +30,8 @@ profile = {
         "learning": "零到全栈",
     },
 }
-
-HISTORY_FILE = "history.json"
-
-def load_history():
-    try:
-        with open(HISTORY_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
-
-def save_record(record):
-    records = load_history()
-    records.append(record)
-    with open(HISTORY_FILE, "w", encoding="utf-8") as f:
-        json.dump(records, f, ensure_ascii=False, indent=2)
-
 class AnalyzeRequest(BaseModel):
     text: str
-
-@app.get("/api/profile")
-def get_profile():
-    return profile
 
 def score_label(score):
     if score>=0.6:
@@ -59,6 +41,10 @@ def score_label(score):
     else:
         return "中性"
     
+@app.get("/api/profile")
+def get_profile():
+    return profile    
+
 @app.post("/api/analyze")
 def analyze(req: AnalyzeRequest):
     text = req.text
@@ -75,6 +61,4 @@ def analyze(req: AnalyzeRequest):
 
 @app.get("/api/history")
 def history():
-    records=load_history()
-    records.reverse()
-    return records[:10]
+    return get_history(10)
