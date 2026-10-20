@@ -23,3 +23,5 @@ backend/.venv/
 
 __pycache__/
 *.py[cod]
+
+backend/history.json
