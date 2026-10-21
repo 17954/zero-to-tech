@@ -25,4 +25,5 @@ __pycache__/
 *.py[cod]
 
 backend/*.db
+backend/*.db.*.bak
 /test.db
